@@ -2,6 +2,15 @@
 
 namespace Artwork_Database
 {
+            //Importing File
+            //  Add datetime property to artwork  
+            //  Change the year to an int check (or limit the entry to four digits?) 
+            //  Add new art into master array
+            //  Print arrays 
+            //  Export methods 
+            //  Error correction and explanation 
+            //  Ensure encapsulation
+            //  Interfaces 
     public class Program
     {
         static void Main(string[] args)
@@ -11,11 +20,16 @@ namespace Artwork_Database
             bool Is_Running = true;  
 
             string[] fileInput = new string[3];
-            Artwork[] unsortedArtArray = CollectUnsortedArt(fileInput);
-            Artwork[] sortedByTitle = InitialSorts(unsortedArtArray, "Title");
-            Artwork[] sortedByArtist = InitialSorts(unsortedArtArray, "Artist");
-            Artwork[] sortedByYear = InitialSorts(unsortedArtArray, "Year");
-            
+            fileInput[0] = "Starry Night | Vincent van Gogh | 1869 | Painting";
+            fileInput[1] = "highest | Gogh | 1989 | Painting";
+            fileInput[2] = "zbottom | Buttface van Gogh | 1889 | Painting";
+
+            int masterArtCount = 0;
+            Artwork[] masterArtArray = CollectUnsortedArt(fileInput);
+
+            Artwork[] sortedByTitle = ObjSort(masterArtArray, "title", masterArtCount);
+            Artwork[] sortedByArtist = ObjSort(masterArtArray, "artist", masterArtCount);
+            Artwork[] sortedByYear = ObjSort(masterArtArray, "year", masterArtCount);
 
             while (Is_Running)
             {
@@ -25,20 +39,37 @@ namespace Artwork_Database
                 {
                     string[] userInputArt = UserEnteredArtwork();
                     Artwork newArtwork = CreateObject(userInputArt);
-                    ObjectInsertAllArrays(newArtwork, sortedByTitle, sortedByArtist, sortedByYear);
-                } else if (choice == 2)
+                    ObjInsert(sortedByTitle, newArtwork, masterArtCount, "title");
+                    ObjInsert(sortedByArtist, newArtwork, masterArtCount, "artist");
+                    ObjInsert(sortedByYear, newArtwork, masterArtCount, "year");
+
+
+                }
+                else if (choice == 2)
                 {
                     bool is_Searching = true;
                     while (is_Searching)
                     {
                         Console.WriteLine("Select your search criteria:\n1) Title 2) Artist 3) Year 4) Return to Previous Menu");
                         int searchChoice = PrintMenu(4);
-                        if (searchChoice >= 1 && searchChoice < 3)
+
+                        switch (searchChoice)
                         {
-                            CriteriaOptions criteria = (CriteriaOptions)searchChoice;
-                        } else
-                        {
-                            is_Searching = false;
+                            case 1:
+                                PrintSearchResult(SearchByProperty(sortedByTitle, "title"));
+                                break;
+                            case 2:
+                                PrintSearchResult(SearchByProperty(sortedByArtist, "artist"));
+                                break;
+                            case 3:
+                                PrintSearchResult(SearchByProperty(sortedByYear, "year"));
+                                break;
+                            case 4:
+                                is_Searching = false;
+                                break;
+                            default:
+                                Console.WriteLine("Invalid Entry");
+                                break;
                         }
                     }
                 } else if (choice == 3)
@@ -74,12 +105,6 @@ namespace Artwork_Database
                 }
 
             }
-        }
-        public enum CriteriaOptions
-        {
-            Title = 1,
-            Artist = 2,
-            Year = 3
         }
 
         //  User Artwork input
@@ -118,34 +143,9 @@ namespace Artwork_Database
             return newArtwork;
         }
 
-        //  Private Helper methods for deciding sorting order 
-        public static string ChooseProperty(Artwork targetArt, string targetProperty)
-        {
-            switch (targetProperty)
-            {
-                case "Title":
-                    return targetArt.Title;
-                case "Artist":
-                    return targetArt.Artist;
-                case "Year": 
-                    return targetArt.Year;
-                default:
-                    return "Property not found";
-            }
-        }
 
-        public static bool NextIndex(string newString, string oldString)
-        {
-            int compResult = String.Compare(newString, oldString, true);
-            if (compResult < 0)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
+
+
         //  Main unsorted collection
         public static Artwork[] CollectUnsortedArt(string[] linesInput)
         {
@@ -158,64 +158,110 @@ namespace Artwork_Database
             return unsortedCollection;
         }
 
-        //  SORTING
-        //  Initial Sorting
-        public static Artwork[] InitialSorts(Artwork[] unsortedInput, string targetProperty)
+
+
+        static Artwork[] ObjSort(Artwork[] masterArray, string targetProperty, int count)
         {
-            Artwork[] sortedArray = new Artwork[unsortedInput.Length];
-            for (int i = 0; i < unsortedInput.Length; i++)
+            Artwork[] sortedArray = new Artwork[masterArray.Length];
+            count = 0;
+            for (int i=0; i < masterArray.Length; i++)
             {
-                ObjectInsert(unsortedInput[i], sortedArray, targetProperty);
+                ObjInsert(sortedArray, masterArray[i], count, targetProperty);
+                count++;
             }
             return sortedArray;
         }
-        //  Array 
-        public static void ObjectInsertAllArrays(Artwork newObj, Artwork[] byTitle, Artwork[] byArtist, Artwork[] byYear)
-        {
-            ObjectInsert(newObj, byTitle, "Title");
-            ObjectInsert(newObj, byArtist, "Artist" );
-            ObjectInsert(newObj, byYear, "Year");
 
-        }
-
-        public static Artwork[] ObjectInsert(Artwork newObj, Artwork[] artArray, string targetProperty) 
+        static string ChooseProperty(Artwork artwork, string targetProperty)
         {
-            Artwork[] newArray = new Artwork[artArray.Length + 1];
-            for (int i = 0, j = 0; i < newArray.Length; i++)
+            if (artwork == null)
             {
-                if (NextIndex(ChooseProperty(newObj, targetProperty), ChooseProperty(artArray[i], targetProperty))) 
+                throw new ArgumentNullException(nameof(artwork), "Artwork cannot be null or empty");
+            }
+            targetProperty = targetProperty.Trim().ToLower();
+
+            if (targetProperty == "title")
+            {
+                return artwork.Title;
+            } else if(targetProperty == "artist") {
+                return artwork.Artist;
+            } else if (targetProperty == "year")
+            {
+                return artwork.Year;
+            } else
+            {
+                throw new ArgumentException($"Invalid property name: '{targetProperty}'. Valid options are 'Title', 'Artist', or 'Year'.");
+            }
+        }
+        
+        static void ObjInsert(Artwork[] sortedArray, Artwork newArtwork, int count, string targetProperty)
+        {
+            for (int i = count; i > 0;  i--)
+            {
+                string currentProperty = ChooseProperty(sortedArray[i - 1], targetProperty);
+                string newProperty = ChooseProperty(newArtwork, targetProperty);
+                if (string.Compare(currentProperty, newProperty, true) > 0)
                 {
-                    newArray[i] = newObj;
+                    sortedArray[i] = sortedArray[i - 1];
                 } else
                 {
-                    newArray[i] = artArray[j];
-                    j++;
+                    sortedArray[i] = newArtwork;
+                    return;
                 }
             }
-            return newArray;
+            sortedArray[0] = newArtwork;
         }
+        public static Artwork SearchByProperty(Artwork[] sortedArray, string targetProperty)
+        {
+            Console.WriteLine("Please enter your inquiry:");
+            string userInput = Console.ReadLine().Trim().ToLower();
 
+            int left = 0;
+            int right = sortedArray.Length - 1;
 
+            while (left <= right)
+            {
+                int middle = (left + right) / 2;
 
+                // Retrieve the property value for the current middle item
+                string propertyCheck = ChooseProperty(sortedArray[middle], targetProperty).ToLower();
 
+                // Compare the user input with the current property value
+                int comparison = string.Compare(propertyCheck, userInput, StringComparison.OrdinalIgnoreCase);
 
+                if (comparison == 0)
+                {
+                    // Match found
+                    return sortedArray[middle];
+                }
+                else if (comparison < 0)
+                {
+                    // User input is greater than the current property value (search right half)
+                    left = middle + 1;
+                }
+                else
+                {
+                    // User input is less than the current property value (search left half)
+                    right = middle - 1;
+                }
+            }
 
-
-
-        //  FILE READER CLASS                                                           x
-        //  Accepting the file as an array of lines                                     x
-        //  File data has a for loop to insert sort every object into each array        x
-        //  A snipper method (with trim)                                                x
-        //  Passes to Artwork method to construct objects                               x
-        //  Identifier of needed property                                               x
-        //  Comparision method to return sorting instruction                            x
-        //  Insertion method to adjust the array                                        x
-        //  Binary search method (call upon comparision method) 
-        //  User prompt to array method                                                 x
-        //  User menu to choose sorting criteria                                        x
-
- 
-
+            // No match found
+            Console.WriteLine("Selection not found.");
+            return null;
+        }
+        public static void PrintSearchResult(Artwork artwork)
+        {
+            if (artwork != null)
+            {
+                Console.WriteLine("Search result:");
+                Console.WriteLine(artwork.PrintArtwork());
+            }
+            else
+            {
+                Console.WriteLine("No matching artwork found.");
+            }
+        }
 
     }
 }
