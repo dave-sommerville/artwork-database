@@ -14,17 +14,10 @@
             Year = year;
             Medium = medium;
         }
-        public static Artwork CreateObject(string[] splitInput)
+
+        public string PrintArtwork()
         {
-            if (splitInput.Length != 4)
-            {
-                Console.WriteLine("Array must have exactly four elements"); // Will want to convert to a throw error 
-            }
-            return new Artwork(splitInput[0], splitInput[1], splitInput[2], splitInput[3]);
-        }
-        public static string PrintArtwork(Artwork art)
-        {
-            string newLine = $"{art.Title} | {art.Artist} | {art.Year} | {art.Medium}";
+            string newLine = $"{Title} | {Artist} | {Year} | {Medium}";
             return newLine;
         }
     }
