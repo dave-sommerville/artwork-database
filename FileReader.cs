@@ -5,7 +5,7 @@ namespace Artwork_Database
 {
     public class FileReader
     {
-        public string[] ReadFile(string filepath)
+        public static string[] ReadFile(string filepath)
         {       //  Catches added as per research into exceptions 
             try
             {
